@@ -5,12 +5,8 @@ namespace peanalyzer
 {
 	namespace util
 	{
-		unsigned short short_from_bytes(std::byte upper_byte, std::byte lower_byte);
-		template<size_t byte_count>
-		unsigned short short_from_bytes(std::byte (&bytes)[byte_count], size_t offset);
-		unsigned short short_from_bytes(std::byte* bytes);
-		unsigned long long_from_bytes(std::byte* bytes);
-		unsigned long long u64_from_bytes(std::byte* bytes);
+		template<typename T> T from_bytes(std::byte* bytes);
+		std::string from_bytes(std::vector<std::byte>& buffer, size_t offset, size_t number_of_bytes);
 	}
 }
 

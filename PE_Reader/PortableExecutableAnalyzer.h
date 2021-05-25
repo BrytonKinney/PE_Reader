@@ -3,6 +3,7 @@
 #include "constants.h"
 #include "util.h"
 #include "ImageHeaders.h"
+#include <Zydis/Zydis.h>
 
 class PortableExecutableAnalyzer 
 {
@@ -11,25 +12,28 @@ private:
 	std::vector<std::byte> buffer;
 	std::byte dos_header[8];
 	std::byte pe_signature[4];
-	std::byte image_file_header[20];
-	peanalyzer::constants::MachineType machine_type;
 	IMAGE_FILE_HEADER file_header;
 	IMAGE_OPTIONAL_HEADER optional_header;
-	void SetImageFileHeaderFields();
+	std::vector<SECTION_HEADER> section_headers;
+	std::vector<SECTION_DATA> section_data;
+	std::vector<ZydisDecodedInstruction> instructions;
+	std::string text_instructions;
+	std::stringstream text_instruction_stream;
+	std::size_t bytes_read;
+	void SetImageFileHeaderFields(size_t offset);
 	void SetOptionalHeaderFields(size_t offset);
+	void SetSectionHeaders(size_t offset, unsigned int number_of_sections);
+	void Disassemble(std::vector<std::byte>& buffer, unsigned long long virtual_address, std::ostream& instruction_stream);
+	std::size_t AnalyzeFile();
 public:
 	PortableExecutableAnalyzer(std::string& file_path);
 	~PortableExecutableAnalyzer();
-	std::size_t AnalyzeFile();
-	peanalyzer::constants::MachineType& GetMachineType();
-	unsigned short GetNumberOfSections();
-	unsigned long GetTimestamp();
-	unsigned long GetPointerToSymbolTable();
-	unsigned long GetNumberOfSymbols();
-	unsigned short GetSizeOfOptionalHeader();
-	unsigned short GetCharacteristics();
 	IMAGE_FILE_HEADER& GetFileHeader();
 	const IMAGE_FILE_HEADER& GetFileHeader() const;
 	IMAGE_OPTIONAL_HEADER& GetOptionalHeader();
 	const IMAGE_OPTIONAL_HEADER& GetOptionalHeader() const;
+	std::vector<SECTION_HEADER>& GetSectionHeaders();
+	std::string& GetTextSectionDisassembly();
+	void WriteTextSectionDisassemblyToStream(std::ostream& out_stream);
+	size_t GetBytesRead();
 };

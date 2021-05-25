@@ -1,34 +1,15 @@
 #include "util.h"
 #include "constants.h"
+#include "ImageHeaders.h"
 
-unsigned short peanalyzer::util::short_from_bytes(std::byte upper_byte, std::byte lower_byte) 
+std::string peanalyzer::util::from_bytes(std::vector<std::byte>& buffer, size_t offset, size_t number_of_bytes) 
 {
-	return (static_cast<unsigned short>(upper_byte) << 8) | static_cast<unsigned short>(lower_byte);
-}
-
-unsigned short peanalyzer::util::short_from_bytes(std::byte* bytes)
-{
-	return (static_cast<unsigned short>(*(bytes + 1)) << 8) | static_cast<unsigned short>(*bytes);
-}
-
-unsigned long peanalyzer::util::long_from_bytes(std::byte * bytes)
-{
-	return  (static_cast<unsigned long>(*(bytes + 3)) << 24) | 
-			(static_cast<unsigned long>(*(bytes + 2)) << 16) |
-			(static_cast<unsigned long>(*(bytes + 1)) << 8) | 
-			(static_cast<unsigned long>(*bytes));
-}
-
-unsigned long long peanalyzer::util::u64_from_bytes(std::byte* bytes)
-{
-	return  (static_cast<unsigned long long>(*(bytes + 7)) << 56) |
-			(static_cast<unsigned long long>(*(bytes + 6)) << 48) |
-			(static_cast<unsigned long long>(*(bytes + 5)) << 40) |
-			(static_cast<unsigned long long>(*(bytes + 4)) << 32) |
-			(static_cast<unsigned long long>(*(bytes + 3)) << 24) |
-			(static_cast<unsigned long long>(*(bytes + 2)) << 16) |
-			(static_cast<unsigned long long>(*(bytes + 1)) << 8) |
-			static_cast<unsigned long long>(*bytes);
+	std::stringstream byte_string;
+	for (size_t iter = offset; iter < offset + number_of_bytes; iter++)
+	{
+		byte_string << static_cast<char>(buffer.at(iter));
+	}
+	return byte_string.str();
 }
 
 std::ostream& operator << (std::ostream& out, const peanalyzer::constants::MachineType value)
@@ -45,6 +26,77 @@ std::ostream& operator << (std::ostream& out, const peanalyzer::constants::Machi
 			out << "Intel Itanium";
 			break;
 		default: break;
+	}
+	return out;
+}
+
+std::ostream& operator << (std::ostream& out, const peanalyzer::constants::PEBitness value)
+{
+	switch (value)
+	{
+		case peanalyzer::constants::PEBitness::IMAGE_NT_OPTIONAL_MAGIC_32:
+			out << "32 Bit";
+			break;
+		case peanalyzer::constants::PEBitness::IMAGE_NT_OPTIONAL_MAGIC_64:
+			out << "64 Bit";
+			break;
+		case peanalyzer::constants::PEBitness::IMAGE_ROM_OPTIONAL_MAGIC:
+			out << "ROM";
+			break;
+		default: break;
+	}
+	return out;
+}
+
+std::ostream& operator << (std::ostream& out, const peanalyzer::constants::Subsystem value)
+{
+	using namespace peanalyzer::constants;
+	switch (value)
+	{
+		case Subsystem::IMAGE_SUBSYSTEM_UNKNOWN:
+			out << "IMAGE_SUBSYSTEM_UNKNOWN";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_NATIVE:
+			out << "IMAGE_SUBSYSTEM_NATIVE";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_GUI:
+			out << "IMAGE_SUBSYSTEM_WINDOWS_GUI";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_CUI:
+			out << "IMAGE_SUBSYSTEM_WINDOWS_CUI";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_OS2_CUI:
+			out << "IMAGE_SUBSYSTEM_OS2_CUI";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_POSIX_CUI:
+			out << "IMAGE_SUBSYSTEM_POSIX_CUI";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_NATIVE_WINDOWS:
+			out << "IMAGE_SUBSYSTEM_NATIVE_WINDOWS";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:
+			out << "IMAGE_SUBSYSTEM_WINDOWS_CE_GUI";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_EFI_APPLICATION:
+			out << "IMAGE_SUBSYSTEM_EFI_APPLICATION";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER:
+			out << "IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
+			out << "IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_EFI_ROM:
+			out << "IMAGE_SUBSYSTEM_EFI_ROM";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_XBOX:
+			out << "IMAGE_SUBSYSTEM_XBOX";
+			break;
+		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION:
+			out << "IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION";
+			break;
+		default:
+			break;
 	}
 	return out;
 }

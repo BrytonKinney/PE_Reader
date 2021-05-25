@@ -1,8 +1,13 @@
 #pragma once
-template<size_t byte_count>
-unsigned short peanalyzer::util::short_from_bytes(std::byte(&bytes)[byte_count], size_t offset)
+
+template<typename T>
+T peanalyzer::util::from_bytes(std::byte* bytes)
 {
-	if (offset < byte_count && offset + 1 < byte_count)
-		return (static_cast<unsigned short>(bytes[offset + 1]) << 8) | static_cast<unsigned short>(bytes[offset]);
-	return 0;
+	size_t size = sizeof(T);
+	T value = 0;
+	for (int i = 0; i < size; i++)
+	{
+		value |= static_cast<T>(*(bytes + i)) << (8 * i);
+	}
+	return value;
 }
