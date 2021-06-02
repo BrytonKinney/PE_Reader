@@ -2,83 +2,95 @@
 #include "constants.h"
 #include "peanalyzer.h"
 
-struct IMAGE_FILE_HEADER
+namespace peanalyzer
 {
-	peanalyzer::constants::MachineType Machine;
-	unsigned short NumberOfSections;
-	unsigned int TimeDateStamp;
-	unsigned int PointerToSymbolTable;
-	unsigned int NumberOfSymbols;
-	unsigned short SizeOfOptionalHeader;
-	unsigned short Characteristics;
-};
+	struct IMAGE_FILE_HEADER
+	{
+		constants::MachineType Machine = constants::MachineType::PE_IMAGE_FILE_MACHINE_AMD64;
+		uint16_t NumberOfSections = 0;
+		uint32_t TimeDateStamp = 0;
+		uint32_t PointerToSymbolTable = 0;
+		uint32_t NumberOfSymbols = 0;
+		uint16_t SizeOfOptionalHeader = 0;
+		uint16_t Characteristics = 0;
+	};
 
-struct IMAGE_DATA_DIRECTORY
-{
-	unsigned int VirtualAddress = 0;
-	unsigned int Size = 0;
-};
+	struct IMAGE_DATA_DIRECTORY
+	{
+		uint32_t VirtualAddress = 0;
+		uint32_t Size = 0;
+	};
 
-struct IMAGE_OPTIONAL_HEADER
-{
-	peanalyzer::constants::PEBitness Magic;
-	std::byte MajorLinkerVersion = std::byte{ 0x0 };
-	std::byte MinorLinkerVersion = std::byte{ 0x0 };
-	unsigned int SizeOfCode = 0;
-	unsigned int SizeOfInitializedData = 0;
-	unsigned int SizeOfUninitializedData = 0;
-	unsigned int AddressOfEntryPoint = 0;
-	unsigned int BaseOfCode = 0;
-	unsigned int BaseOfData = 0;
-	unsigned long long ImageBase = 0;
-	unsigned int SectionAlignment = 0;
-	unsigned int FileAlignment = 0;
-	unsigned short MajorOperatingSystemVersion = 0;
-	unsigned short MinorOperatingSystemVersion = 0;
-	unsigned short MajorImageVersion = 0;
-	unsigned short MinorImageVersion = 0;
-	unsigned short MajorSubsystemVersion = 0;
-	unsigned short MinorSubsystemVersion = 0;
-	unsigned int Win32VersionValue = 0;
-	unsigned int SizeOfImage = 0;
-	unsigned int SizeOfHeaders = 0;
-	unsigned int CheckSum = 0;
-	peanalyzer::constants::Subsystem Subsystem;
-	unsigned short DllCharacteristics = 0;
-	unsigned long long SizeOfStackReserve = 0;
-	unsigned long long SizeOfStackCommit = 0;
-	unsigned long long SizeOfHeapReserve = 0;
-	unsigned long long SizeOfHeapCommit = 0;
-	unsigned int LoaderFlags = 0;
-	unsigned int NumberOfRvaAndSizes = 0;
-	std::vector<IMAGE_DATA_DIRECTORY> DataDirectory;
-};
+	struct IMAGE_OPTIONAL_HEADER
+	{
+		peanalyzer::constants::PEBitness Magic = peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_32;
+		std::byte MajorLinkerVersion = std::byte{ 0x0 };
+		std::byte MinorLinkerVersion = std::byte{ 0x0 };
+		uint32_t SizeOfCode = 0;
+		uint32_t SizeOfInitializedData = 0;
+		uint32_t SizeOfUninitializedData = 0;
+		uint32_t AddressOfEntryPoint = 0;
+		uint32_t BaseOfCode = 0;
+		uint32_t BaseOfData = 0;
+		uint64_t ImageBase = 0;
+		uint32_t SectionAlignment = 0;
+		uint32_t FileAlignment = 0;
+		uint16_t MajorOperatingSystemVersion = 0;
+		uint16_t MinorOperatingSystemVersion = 0;
+		uint16_t MajorImageVersion = 0;
+		uint16_t MinorImageVersion = 0;
+		uint16_t MajorSubsystemVersion = 0;
+		uint16_t MinorSubsystemVersion = 0;
+		uint32_t Win32VersionValue = 0;
+		uint32_t SizeOfImage = 0;
+		uint32_t SizeOfHeaders = 0;
+		uint32_t CheckSum = 0;
+		peanalyzer::constants::Subsystem Subsystem = peanalyzer::constants::Subsystem::PE_IMAGE_SUBSYSTEM_EFI_APPLICATION;
+		uint16_t DllCharacteristics = 0;
+		uint64_t SizeOfStackReserve = 0;
+		uint64_t SizeOfStackCommit = 0;
+		uint64_t SizeOfHeapReserve = 0;
+		uint64_t SizeOfHeapCommit = 0;
+		uint32_t LoaderFlags = 0;
+		uint32_t NumberOfRvaAndSizes = 0;
+		std::vector<IMAGE_DATA_DIRECTORY> DataDirectory;
+	};
 
-struct SECTION_HEADER
-{
-	std::string Name;
-	unsigned int VirtualSize;
-	unsigned int VirtualAddress;
-	unsigned int SizeOfRawData;
-	unsigned int PointerToRawData;
-	unsigned int PointerToRelocations;
-	unsigned int PointerToLineNumbers;
-	unsigned int NumberOfRelocations;
-	unsigned int NumberOfLineNumbers;
-	unsigned int Characteristics;
-};
+	struct SECTION_HEADER
+	{
+		std::string Name;
+		uint32_t VirtualSize = 0;
+		uint32_t VirtualAddress = 0;
+		uint32_t SizeOfRawData = 0;
+		uint32_t PointerToRawData = 0;
+		uint32_t PointerToRelocations = 0;
+		uint32_t PointerToLineNumbers = 0;
+		uint32_t NumberOfRelocations = 0;
+		uint32_t NumberOfLineNumbers = 0;
+		uint32_t Characteristics = 0;
+	};
 
-struct IMPORT_SECTION
-{
-	unsigned int LookupTableRVA;
-	unsigned int Timestamp;
-	unsigned int ForwarderChain;
-	unsigned int NameRVA;
-	unsigned int AddressTableRVA;
-};
+	struct IMPORT_SECTION
+	{
+		uint32_t LookupTableRVA = 0;
+		uint32_t Timestamp = 0;
+		uint32_t ForwarderChain = 0;
+		uint32_t NameRVA = 0;
+		uint32_t AddressTableRVA = 0;
+	};
 
-struct SECTION_DATA
-{
-	std::string Name;
-	std::vector<std::byte> Data;
-};
+	struct SECTION_DATA
+	{
+		std::string Name;
+		std::vector<std::byte> Data;
+	};
+
+	struct IMPORT_DIRECTORY_TABLE
+	{
+		uint32_t ImportLookupTableRVA = 0;
+		uint32_t Timestamp = 0;
+		uint32_t ForwarderChain = 0;
+		uint32_t NameRVA = 0;
+		uint32_t ImportAddressTableRVA = 0;
+	};
+}

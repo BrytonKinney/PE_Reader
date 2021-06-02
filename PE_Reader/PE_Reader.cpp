@@ -8,11 +8,12 @@ template <typename TIntegral, typename T>
 bool HasCharacteristic(TIntegral characteristics, T check);
 std::string PrintDllCharacteristics(unsigned short dll_characteristics);
 std::string PrintCharacteristics(unsigned short characteristics);
-std::string PrintDataDirectories(std::vector<IMAGE_DATA_DIRECTORY>& directories);
+std::string PrintDataDirectories(std::vector<peanalyzer::IMAGE_DATA_DIRECTORY>& directories);
 std::string PrintSectionFlags(unsigned int flags);
-void PrintFileHeader(IMAGE_FILE_HEADER& file_header);
-void PrintOptionalHeader(IMAGE_OPTIONAL_HEADER& optional_header);
-void PrintSectionHeaders(std::vector<SECTION_HEADER>& section_headers);
+void PrintFileHeader(peanalyzer::IMAGE_FILE_HEADER& file_header);
+void PrintOptionalHeader(peanalyzer::IMAGE_OPTIONAL_HEADER& optional_header);
+void PrintSectionHeaders(std::vector<peanalyzer::SECTION_HEADER>& section_headers);
+std::tm& GetTime(uint32_t timestamp_value);
 
 int main(int argc, char** argv)
 {
@@ -30,12 +31,21 @@ int main(int argc, char** argv)
     if(pe_analyzer.GetFileHeader().SizeOfOptionalHeader > 0)
         PrintOptionalHeader(pe_analyzer.GetOptionalHeader());
     PrintSectionHeaders(pe_analyzer.GetSectionHeaders());
+    std::cout << "\nImport Directory Table\n--------------------------\n";
+    for (auto& idt : pe_analyzer.GetImportDirectoryTable())
+    {
+        std::cout << "Import Lookup Table RVA: " << std::hex << idt.ImportLookupTableRVA << std::dec << std::endl;
+        auto timeInfo = GetTime(idt.Timestamp);
+        std::cout << "Time/Date Stamp: " << std::put_time(&timeInfo, "%c") << "\n";
+        std::cout << "Forwarder Chain: " << idt.ForwarderChain << std::endl;
+        std::cout << "Import Name RVA: " << std::hex << idt.NameRVA << std::endl;
+        std::cout << "Import Address Table RVA: " << idt.ImportAddressTableRVA << std::dec << "\n--------------------------" << std::endl;
+    }
     std::ofstream text_fstream{ "text_section.txt", std::ios::trunc };
     pe_analyzer.WriteTextSectionDisassemblyToStream(text_fstream);
     text_fstream.close();
     std::filesystem::path text_section_path = std::filesystem::current_path().append("text_section.txt");
     std::cout << "Text disassembly written to " << text_section_path << std::endl;
-    //std::cout << "\n.TEXT DISASSEMBLY\n--------------------------\n" << pe_analyzer.GetTextSectionDisassembly();
     return 0;
 }
 
@@ -49,35 +59,35 @@ std::string PrintCharacteristics(unsigned short characteristics)
 {
     using namespace peanalyzer::constants;
     std::stringstream characteristic_stream;
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_RELOCS_STRIPPED))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_RELOCS_STRIPPED))
         characteristic_stream << "- IMAGE_FILE_RELOCS_STRIPPED" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_EXECUTABLE_IMAGE))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_EXECUTABLE_IMAGE))
         characteristic_stream << "- IMAGE_FILE_EXECUTABLE_IMAGE" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_LINE_NUMS_STRIPPED))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_LINE_NUMS_STRIPPED))
         characteristic_stream << "- IMAGE_FILE_LINE_NUMS_STRIPPED" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_LOCAL_SYMS_STRIPPED))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_LOCAL_SYMS_STRIPPED))
         characteristic_stream << "- IMAGE_FILE_LOCAL_SYMS_STRIPPED" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_AGGRESIVE_WS_TRIM))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_AGGRESIVE_WS_TRIM))
         characteristic_stream << "- IMAGE_FILE_AGGRESIVE_WS_TRIM" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_LARGE_ADDRESS_AWARE))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_LARGE_ADDRESS_AWARE))
         characteristic_stream << "- IMAGE_FILE_LARGE_ADDRESS_AWARE" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_BYTES_REVERSED_LO))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_BYTES_REVERSED_LO))
         characteristic_stream << "- IMAGE_FILE_BYTES_REVERSED_LO" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_32BIT_MACHINE))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_32BIT_MACHINE))
         characteristic_stream << "- IMAGE_FILE_32BIT_MACHINE" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_DEBUG_STRIPPED))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_DEBUG_STRIPPED))
         characteristic_stream << "- IMAGE_FILE_DEBUG_STRIPPED" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP))
         characteristic_stream << "- IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_NET_RUN_FROM_SWAP))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_NET_RUN_FROM_SWAP))
         characteristic_stream << "- IMAGE_FILE_NET_RUN_FROM_SWAP" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_SYSTEM))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_SYSTEM))
         characteristic_stream << "- IMAGE_FILE_SYSTEM" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_DLL))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_DLL))
         characteristic_stream << "- IMAGE_FILE_DLL" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_UP_SYSTEM_ONLY))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_UP_SYSTEM_ONLY))
         characteristic_stream << "- IMAGE_FILE_UP_SYSTEM_ONLY" << "\n";
-    if (HasCharacteristic(characteristics, PECharacteristics::IMAGE_FILE_BYTES_REVERSED_HI))
+    if (HasCharacteristic(characteristics, PECharacteristics::PE_IMAGE_FILE_BYTES_REVERSED_HI))
         characteristic_stream << "- IMAGE_FILE_BYTES_REVERSED_HI" << "\n";
     return characteristic_stream.str();
 }
@@ -86,33 +96,31 @@ std::string PrintDllCharacteristics(unsigned short dll_characteristics)
 {
     using namespace peanalyzer::constants;
     std::stringstream characteristic_stream;
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_NX_COMPAT))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_NX_COMPAT))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_NX_COMPAT" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_NO_ISOLATION))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_NO_ISOLATION))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_NO_ISOLATION" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_NO_SEH))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_NO_SEH))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_NO_SEH" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_NO_BIND))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_NO_BIND))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_NO_BIND" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_WDM_DRIVER))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_WDM_DRIVER))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_WDM_DRIVER" << "\n";
-    if (HasCharacteristic(dll_characteristics, DllCharacteristics::IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE))
+    if (HasCharacteristic(dll_characteristics, DllCharacteristics::PE_IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE))
         characteristic_stream << "- IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE" << "\n";
     return characteristic_stream.str();
 }
 
-void PrintFileHeader(IMAGE_FILE_HEADER& file_header)
+void PrintFileHeader(peanalyzer::IMAGE_FILE_HEADER& file_header)
 {
     std::cout << "\nFILE HEADER\n--------------------------\n";
     std::cout << "Machine type: " << file_header.Machine << "\n";
     std::cout << "Number of sections: " << file_header.NumberOfSections << "\n";
-    std::time_t timestamp = file_header.TimeDateStamp;
-    struct std::tm timeInfo;
-    localtime_s(&timeInfo, &timestamp);
+    auto timeInfo = GetTime(file_header.TimeDateStamp);
     std::cout << "Timestamp (linker creation time): " << std::put_time(&timeInfo, "%c") << "\n";
     std::cout << "Pointer to symbol table: " << file_header.PointerToSymbolTable << "\n";
     std::cout << "Number of symbols: " << file_header.NumberOfSymbols << "\n";
@@ -120,7 +128,15 @@ void PrintFileHeader(IMAGE_FILE_HEADER& file_header)
     std::cout << "Characteristics:\n" << PrintCharacteristics(file_header.Characteristics) << "\n";
 }
 
-void PrintOptionalHeader(IMAGE_OPTIONAL_HEADER& optional_header)
+std::tm& GetTime(uint32_t timestamp_value)
+{
+    std::time_t timestamp = timestamp_value;
+    std::tm timeInfo;
+    localtime_s(&timeInfo, &timestamp);
+    return timeInfo;
+}
+
+void PrintOptionalHeader(peanalyzer::IMAGE_OPTIONAL_HEADER& optional_header)
 {
     std::cout << "OPTIONAL HEADER\n--------------------------\n";
     std::cout << "Magic Number (PE Bitness): " << optional_header.Magic << std::endl;
@@ -152,7 +168,7 @@ void PrintOptionalHeader(IMAGE_OPTIONAL_HEADER& optional_header)
     std::cout << PrintDataDirectories(optional_header.DataDirectory) << std::endl;
 }
 
-std::string PrintDataDirectories(std::vector<IMAGE_DATA_DIRECTORY>& directories)
+std::string PrintDataDirectories(std::vector<peanalyzer::IMAGE_DATA_DIRECTORY>& directories)
 {
     std::stringstream characteristic_stream;
     characteristic_stream << "\nDATA DIRECTORIES\n--------------------------\n";
@@ -169,83 +185,83 @@ std::string PrintSectionFlags(unsigned int flags)
 {
     using namespace peanalyzer::constants;
     std::stringstream characteristic_stream;
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_TYPE_NO_PAD))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_TYPE_NO_PAD))
         characteristic_stream << "- IMAGE_SCN_TYPE_NO_PAD" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_CNT_CODE))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_CNT_CODE))
         characteristic_stream << "- IMAGE_SCN_CNT_CODE" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_CNT_INITIALIZED_DATA))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_CNT_INITIALIZED_DATA))
         characteristic_stream << "- IMAGE_SCN_CNT_INITIALIZED_DATA" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_CNT_UNINITIALIZED_DATA))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_CNT_UNINITIALIZED_DATA))
         characteristic_stream << "- IMAGE_SCN_CNT_UNINITIALIZED_DATA" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_LNK_OTHER))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_LNK_OTHER))
         characteristic_stream << "- IMAGE_SCN_LNK_OTHER" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_LNK_INFO))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_LNK_INFO))
         characteristic_stream << "- IMAGE_SCN_LNK_INFO" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_LNK_REMOVE))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_LNK_REMOVE))
         characteristic_stream << "- IMAGE_SCN_LNK_REMOVE" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_LNK_COMDAT))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_LNK_COMDAT))
         characteristic_stream << "- IMAGE_SCN_LNK_COMDAT" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_GPREL))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_GPREL))
         characteristic_stream << "- IMAGE_SCN_GPREL" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_PURGEABLE))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_PURGEABLE))
         characteristic_stream << "- IMAGE_SCN_MEM_PURGEABLE" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_16BIT))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_16BIT))
         characteristic_stream << "- IMAGE_SCN_MEM_16BIT" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_LOCKED))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_LOCKED))
         characteristic_stream << "- IMAGE_SCN_MEM_LOCKED" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_PRELOAD))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_PRELOAD))
         characteristic_stream << "- IMAGE_SCN_MEM_PRELOAD" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_1BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_1BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_1BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_2BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_2BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_2BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_4BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_4BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_4BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_8BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_8BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_8BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_16BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_16BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_16BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_32BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_32BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_32BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_64BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_64BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_64BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_128BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_128BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_128BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_256BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_256BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_256BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_512BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_512BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_512BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_1024BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_1024BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_1024BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_2048BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_2048BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_2048BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_4096BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_4096BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_4096BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_ALIGN_8192BYTES))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_ALIGN_8192BYTES))
         characteristic_stream << "- IMAGE_SCN_ALIGN_8192BYTES" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_LNK_NRELOC_OVFL))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_LNK_NRELOC_OVFL))
         characteristic_stream << "- IMAGE_SCN_LNK_NRELOC_OVFL" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_DISCARDABLE))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_DISCARDABLE))
         characteristic_stream << "- IMAGE_SCN_MEM_DISCARDABLE" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_NOT_CACHED))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_NOT_CACHED))
         characteristic_stream << "- IMAGE_SCN_MEM_NOT_CACHED" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_NOT_PAGED))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_NOT_PAGED))
         characteristic_stream << "- IMAGE_SCN_MEM_NOT_PAGED" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_SHARED))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_SHARED))
         characteristic_stream << "- IMAGE_SCN_MEM_SHARED" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_EXECUTE))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_EXECUTE))
         characteristic_stream << "- IMAGE_SCN_MEM_EXECUTE" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_READ))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_READ))
         characteristic_stream << "- IMAGE_SCN_MEM_READ" << "\n";
-    if (HasCharacteristic(flags, SectionCharacteristics::IMAGE_SCN_MEM_WRITE))
+    if (HasCharacteristic(flags, SectionCharacteristics::PE_IMAGE_SCN_MEM_WRITE))
         characteristic_stream << "- IMAGE_SCN_MEM_WRITE" << "\n";
     return characteristic_stream.str();
 }
 
-void PrintSectionHeaders(std::vector<SECTION_HEADER>& section_headers)
+void PrintSectionHeaders(std::vector<peanalyzer::SECTION_HEADER>& section_headers)
 {
     std::cout << "SECTION HEADERS\n--------------------------\n";
-    for (SECTION_HEADER& section_header : section_headers)
+    for (peanalyzer::SECTION_HEADER& section_header : section_headers)
     {
         std::cout << section_header.Name << "\n--------------------------\n";
         std::cout << "Virtual Size: " << section_header.VirtualSize << "\n";

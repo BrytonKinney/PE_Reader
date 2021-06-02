@@ -16,13 +16,13 @@ std::ostream& operator << (std::ostream& out, const peanalyzer::constants::Machi
 {
 	switch (value)
 	{
-		case peanalyzer::constants::MachineType::IMAGE_FILE_MACHINE_AMD64:
+		case peanalyzer::constants::MachineType::PE_IMAGE_FILE_MACHINE_AMD64:
 			out << "AMD64 (x64)";
 			break;
-		case peanalyzer::constants::MachineType::IMAGE_FILE_MACHINE_I386:
+		case peanalyzer::constants::MachineType::PE_IMAGE_FILE_MACHINE_I386:
 			out << "I386 (x86)";
 			break;
-		case peanalyzer::constants::MachineType::IMAGE_FILE_MACHINE_IA64:
+		case peanalyzer::constants::MachineType::PE_IMAGE_FILE_MACHINE_IA64:
 			out << "Intel Itanium";
 			break;
 		default: break;
@@ -34,13 +34,13 @@ std::ostream& operator << (std::ostream& out, const peanalyzer::constants::PEBit
 {
 	switch (value)
 	{
-		case peanalyzer::constants::PEBitness::IMAGE_NT_OPTIONAL_MAGIC_32:
+		case peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_32:
 			out << "32 Bit";
 			break;
-		case peanalyzer::constants::PEBitness::IMAGE_NT_OPTIONAL_MAGIC_64:
+		case peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_64:
 			out << "64 Bit";
 			break;
-		case peanalyzer::constants::PEBitness::IMAGE_ROM_OPTIONAL_MAGIC:
+		case peanalyzer::constants::PEBitness::PE_IMAGE_ROM_OPTIONAL_MAGIC:
 			out << "ROM";
 			break;
 		default: break;
@@ -53,46 +53,46 @@ std::ostream& operator << (std::ostream& out, const peanalyzer::constants::Subsy
 	using namespace peanalyzer::constants;
 	switch (value)
 	{
-		case Subsystem::IMAGE_SUBSYSTEM_UNKNOWN:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_UNKNOWN:
 			out << "IMAGE_SUBSYSTEM_UNKNOWN";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_NATIVE:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_NATIVE:
 			out << "IMAGE_SUBSYSTEM_NATIVE";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_GUI:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_WINDOWS_GUI:
 			out << "IMAGE_SUBSYSTEM_WINDOWS_GUI";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_CUI:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_WINDOWS_CUI:
 			out << "IMAGE_SUBSYSTEM_WINDOWS_CUI";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_OS2_CUI:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_OS2_CUI:
 			out << "IMAGE_SUBSYSTEM_OS2_CUI";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_POSIX_CUI:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_POSIX_CUI:
 			out << "IMAGE_SUBSYSTEM_POSIX_CUI";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_NATIVE_WINDOWS:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_NATIVE_WINDOWS:
 			out << "IMAGE_SUBSYSTEM_NATIVE_WINDOWS";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_WINDOWS_CE_GUI:
 			out << "IMAGE_SUBSYSTEM_WINDOWS_CE_GUI";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_EFI_APPLICATION:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_EFI_APPLICATION:
 			out << "IMAGE_SUBSYSTEM_EFI_APPLICATION";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER:
 			out << "IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER:
 			out << "IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_EFI_ROM:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_EFI_ROM:
 			out << "IMAGE_SUBSYSTEM_EFI_ROM";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_XBOX:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_XBOX:
 			out << "IMAGE_SUBSYSTEM_XBOX";
 			break;
-		case Subsystem::IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION:
+		case Subsystem::PE_IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION:
 			out << "IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION";
 			break;
 		default:

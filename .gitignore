@@ -362,3 +362,8 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /PE_Reader/lib
+/PE_ReaderTests/Zydis.dll
+/PE_ReaderTests/lib/Zydis.lib
+/PE_ReaderTests/lib/Zydis.exp
+/PE_ReaderTests/lib/Zydis.dll
+/PE_Reader/text_section.txt
