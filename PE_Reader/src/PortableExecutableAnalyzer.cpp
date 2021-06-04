@@ -1,4 +1,4 @@
-#include "PortableExecutableAnalyzer.h"
+#include <PortableExecutableAnalyzer.h>
 PortableExecutableAnalyzer::PortableExecutableAnalyzer(std::string& file_path)
 {
 	file_stream = std::ifstream(file_path, std::ios::binary | std::ios::ate);
@@ -6,7 +6,7 @@ PortableExecutableAnalyzer::PortableExecutableAnalyzer(std::string& file_path)
 	bytes_read = AnalyzeFile();
 }
 
-PortableExecutableAnalyzer::~PortableExecutableAnalyzer() 
+PortableExecutableAnalyzer::~PortableExecutableAnalyzer()
 {
 	if (CloseHandle(this->file_handle) == 0)
 		std::cout << "Failed to close file handle: " << GetLastError();
@@ -238,7 +238,7 @@ void PortableExecutableAnalyzer::Disassemble(std::vector<std::byte>& buffer, uin
 		char buff[256];
 		ZydisFormatterFormatInstruction(&formatter, &inst, buff, sizeof(buff), virtual_address);
 		instruction_stream << "0x" << std::hex << virtual_address << " | ";
-		for (int i = pos; i < pos + inst.length; i++) 
+		for (int i = pos; i < pos + inst.length; i++)
 		{
 			instruction_stream << std::hex << std::setfill('0') << std::setw(2) << static_cast<uint32_t>(buffer.at(i));
 			if (i < pos + inst.length - 1)
@@ -299,20 +299,67 @@ void PortableExecutableAnalyzer::MapFileToMemory()
 		char* char_mapped_loc = static_cast<char*>(mem_mapped_location);
 		uint64_t idata_location = reinterpret_cast<uint64_t>(char_mapped_loc) + optional_header.DataDirectory[1].VirtualAddress;
 		// 5 fields * 4 byte width = 20
-		for (uint64_t offset_iterator = idata_location; offset_iterator < optional_header.DataDirectory[1].Size + idata_location; offset_iterator += 20)
+		for (uintptr_t offset_iterator = idata_location; offset_iterator < optional_header.DataDirectory[1].Size + idata_location; offset_iterator += 20)
 		{
-			peanalyzer::IMPORT_DIRECTORY_TABLE idt;
-			idt.ImportLookupTableRVA = *reinterpret_cast<uint32_t*>(offset_iterator);
-			idt.Timestamp = *reinterpret_cast<uint32_t*>(offset_iterator + 4);
-			idt.ForwarderChain = *reinterpret_cast<uint32_t*>(offset_iterator + 8);
-			idt.NameRVA = *reinterpret_cast<uint32_t*>(offset_iterator + 12);
-			idt.ImportAddressTableRVA = *reinterpret_cast<uint32_t*>(offset_iterator + 16);
-			import_directory_table.push_back(idt);
+			peanalyzer::IMPORT_INFO import_info;
+			import_info.TableEntry = *reinterpret_cast<peanalyzer::IMPORT_DIRECTORY_TABLE*>(offset_iterator);
+			peanalyzer::IMPORT_LOOKUP_TABLE ilt;
+			uint64_t address = reinterpret_cast<uint64_t>(char_mapped_loc + import_info.TableEntry.ImportLookupTableRVA);
+			if (optional_header.Magic == peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_64)
+				SetImportLookupTableData<peanalyzer::RAW_IMPORT_LOOKUP_TABLE_64>((uint64_t)64, address, &import_info, ilt);
+			else if (optional_header.Magic == peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_32)
+				SetImportLookupTableData<peanalyzer::RAW_IMPORT_LOOKUP_TABLE_32>((uint64_t)32, address, &import_info, ilt);
+			import_entries.push_back(import_info);
 		}
 	}
 }
 
-std::vector<peanalyzer::IMPORT_DIRECTORY_TABLE>& PortableExecutableAnalyzer::GetImportDirectoryTable()
+template<typename T> void PortableExecutableAnalyzer::SetImportLookupTableData(uint64_t import_lookup_offset, uint64_t address, peanalyzer::IMPORT_INFO* import_info, peanalyzer::IMPORT_LOOKUP_TABLE& lookup_table)
 {
-	return import_directory_table;
+	uint64_t ilt_offset = 0;
+	bool is_null = false;
+	uint64_t base_address = address - import_info->TableEntry.ImportLookupTableRVA;
+	std::stringstream name_stream;
+	char current_char;
+	int name_iterator = 0;
+	do
+	{
+		current_char = *reinterpret_cast<char*>(base_address + import_info->TableEntry.NameRVA + name_iterator);
+		if(current_char != '\0')
+			name_stream << current_char;
+		name_iterator++;
+	} while (current_char != '\0');
+	import_info->Name = name_stream.str();
+	do
+	{
+		T rilt = *reinterpret_cast<T*>(address + ilt_offset);
+		if (rilt.TableData == NULL)
+			is_null = true;
+		else
+		{
+			if (optional_header.Magic == peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_32)
+			{
+				lookup_table.ImportByOrdinal = rilt.TableData & 0x80000000;
+				if (lookup_table.ImportByOrdinal)
+					lookup_table.OrdinalNumber = rilt.TableData & 0x7fffffff;
+				else
+					lookup_table.HintNameTableRVA = rilt.TableData & 0x7fffffff;
+			}
+			else if (optional_header.Magic == peanalyzer::constants::PEBitness::PE_IMAGE_NT_OPTIONAL_MAGIC_64)
+			{
+				lookup_table.ImportByOrdinal = rilt.TableData & 0x8000000000000000;
+				if (lookup_table.ImportByOrdinal)
+					lookup_table.OrdinalNumber = rilt.TableData & 0x7FFFFFFFFFFFFFFF;
+				else
+					lookup_table.HintNameTableRVA = rilt.TableData & 0x7FFFFFFFFFFFFFFF;
+			}
+			import_info->LookupTableEntries.push_back(lookup_table);
+		}
+		ilt_offset += import_lookup_offset;
+	} while (!is_null);
+}
+
+std::vector<peanalyzer::IMPORT_INFO>& PortableExecutableAnalyzer::GetImportInformation()
+{
+	return import_entries;
 }

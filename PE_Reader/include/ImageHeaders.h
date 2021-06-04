@@ -93,4 +93,28 @@ namespace peanalyzer
 		uint32_t NameRVA = 0;
 		uint32_t ImportAddressTableRVA = 0;
 	};
+
+	struct RAW_IMPORT_LOOKUP_TABLE_64
+	{
+		uint64_t TableData;
+	};
+
+	struct RAW_IMPORT_LOOKUP_TABLE_32
+	{
+		uint32_t TableData;
+	};
+
+	struct IMPORT_LOOKUP_TABLE
+	{
+		bool ImportByOrdinal = false;
+		uint16_t OrdinalNumber = 0;
+		uint32_t HintNameTableRVA = 0;
+	};
+
+	struct IMPORT_INFO
+	{
+		IMPORT_DIRECTORY_TABLE TableEntry;
+		std::string Name;
+		std::vector<IMPORT_LOOKUP_TABLE> LookupTableEntries;
+	};
 }

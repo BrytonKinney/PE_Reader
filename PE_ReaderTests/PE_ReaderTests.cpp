@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "CppUnitTest.h"
-#include "../PE_Reader/PortableExecutableAnalyzer.h"
-#include "../PE_Reader/constants.h"
-#include "../PE_Reader/util.h"
-#include "../PE_Reader/ImageHeaders.h"
+#include "../PE_Reader/include/PortableExecutableAnalyzer.h"
+#include "../PE_Reader/include/constants.h"
+#include "../PE_Reader/include/util.h"
+#include "../PE_Reader/include/ImageHeaders.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

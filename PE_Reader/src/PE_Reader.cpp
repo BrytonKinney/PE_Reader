@@ -13,7 +13,8 @@ std::string PrintSectionFlags(unsigned int flags);
 void PrintFileHeader(peanalyzer::IMAGE_FILE_HEADER& file_header);
 void PrintOptionalHeader(peanalyzer::IMAGE_OPTIONAL_HEADER& optional_header);
 void PrintSectionHeaders(std::vector<peanalyzer::SECTION_HEADER>& section_headers);
-std::tm& GetTime(uint32_t timestamp_value);
+void GetTime(std::tm* timeInfo, uint32_t timestamp_value);
+void PrintImportDirectoryTable(std::vector<peanalyzer::IMPORT_INFO>& table);
 
 int main(int argc, char** argv)
 {
@@ -31,16 +32,7 @@ int main(int argc, char** argv)
     if(pe_analyzer.GetFileHeader().SizeOfOptionalHeader > 0)
         PrintOptionalHeader(pe_analyzer.GetOptionalHeader());
     PrintSectionHeaders(pe_analyzer.GetSectionHeaders());
-    std::cout << "\nImport Directory Table\n--------------------------\n";
-    for (auto& idt : pe_analyzer.GetImportDirectoryTable())
-    {
-        std::cout << "Import Lookup Table RVA: " << std::hex << idt.ImportLookupTableRVA << std::dec << std::endl;
-        auto timeInfo = GetTime(idt.Timestamp);
-        std::cout << "Time/Date Stamp: " << std::put_time(&timeInfo, "%c") << "\n";
-        std::cout << "Forwarder Chain: " << idt.ForwarderChain << std::endl;
-        std::cout << "Import Name RVA: " << std::hex << idt.NameRVA << std::endl;
-        std::cout << "Import Address Table RVA: " << idt.ImportAddressTableRVA << std::dec << "\n--------------------------" << std::endl;
-    }
+    PrintImportDirectoryTable(pe_analyzer.GetImportInformation());
     std::ofstream text_fstream{ "text_section.txt", std::ios::trunc };
     pe_analyzer.WriteTextSectionDisassemblyToStream(text_fstream);
     text_fstream.close();
@@ -120,7 +112,8 @@ void PrintFileHeader(peanalyzer::IMAGE_FILE_HEADER& file_header)
     std::cout << "\nFILE HEADER\n--------------------------\n";
     std::cout << "Machine type: " << file_header.Machine << "\n";
     std::cout << "Number of sections: " << file_header.NumberOfSections << "\n";
-    auto timeInfo = GetTime(file_header.TimeDateStamp);
+    std::tm timeInfo;
+    GetTime(&timeInfo, file_header.TimeDateStamp);
     std::cout << "Timestamp (linker creation time): " << std::put_time(&timeInfo, "%c") << "\n";
     std::cout << "Pointer to symbol table: " << file_header.PointerToSymbolTable << "\n";
     std::cout << "Number of symbols: " << file_header.NumberOfSymbols << "\n";
@@ -128,12 +121,10 @@ void PrintFileHeader(peanalyzer::IMAGE_FILE_HEADER& file_header)
     std::cout << "Characteristics:\n" << PrintCharacteristics(file_header.Characteristics) << "\n";
 }
 
-std::tm& GetTime(uint32_t timestamp_value)
+void GetTime(std::tm* timeInfo, uint32_t timestamp_value)
 {
     std::time_t timestamp = timestamp_value;
-    std::tm timeInfo;
-    localtime_s(&timeInfo, &timestamp);
-    return timeInfo;
+    localtime_s(timeInfo, &timestamp);
 }
 
 void PrintOptionalHeader(peanalyzer::IMAGE_OPTIONAL_HEADER& optional_header)
@@ -273,5 +264,22 @@ void PrintSectionHeaders(std::vector<peanalyzer::SECTION_HEADER>& section_header
         std::cout << "Number of relocations: " << section_header.NumberOfRelocations << "\n";
         std::cout << "Number of line numbers: " << section_header.NumberOfLineNumbers << "\n";
         std::cout << "Section Flags: \n" << PrintSectionFlags(section_header.Characteristics) << "\n" << std::endl;
+    }
+}
+
+void PrintImportDirectoryTable(std::vector<peanalyzer::IMPORT_INFO>& table)
+{
+    std::cout << "IMPORT DIRECTORY TABLE\n--------------------------\n";
+    for (auto& idt : table)
+    {
+        std::cout << "Import Lookup Table RVA: 0x" << std::hex << idt.TableEntry.ImportLookupTableRVA << std::dec << std::endl;
+        std::cout << "# of Import Lookup Table Entries: " << idt.LookupTableEntries.size() << std::endl;
+        std::tm timeInfo;
+        GetTime(&timeInfo, idt.TableEntry.Timestamp);
+        std::cout << "Time/Date Stamp: " << std::put_time(&timeInfo, "%c") << "\n";
+        std::cout << "Forwarder Chain: " << idt.TableEntry.ForwarderChain << std::endl;
+        std::cout << "Import Name RVA: 0x" << std::hex << idt.TableEntry.NameRVA << std::endl;
+        std::cout << "Import DLL Name: " << idt.Name << std::endl;
+        std::cout << "Import Address Table RVA: 0x" << idt.TableEntry.ImportAddressTableRVA << std::dec << "\n--------------------------" << std::endl;
     }
 }

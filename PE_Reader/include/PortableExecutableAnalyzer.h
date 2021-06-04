@@ -31,7 +31,8 @@ private:
 	HANDLE file_mapping_handle;
 	LPVOID mem_mapped_location;
 	std::string file_path;
-	std::vector<peanalyzer::IMPORT_DIRECTORY_TABLE> import_directory_table;
+	template<typename T> void SetImportLookupTableData(uint64_t import_lookup_offset, uint64_t address, peanalyzer::IMPORT_INFO* import_info, peanalyzer::IMPORT_LOOKUP_TABLE& lookup_table);
+	std::vector<peanalyzer::IMPORT_INFO> import_entries;
 public:
 	PortableExecutableAnalyzer(std::string& file_path);
 	~PortableExecutableAnalyzer();
@@ -40,7 +41,7 @@ public:
 	peanalyzer::IMAGE_OPTIONAL_HEADER& GetOptionalHeader();
 	const peanalyzer::IMAGE_OPTIONAL_HEADER& GetOptionalHeader() const;
 	std::vector<peanalyzer::SECTION_HEADER>& GetSectionHeaders();
-	std::vector<peanalyzer::IMPORT_DIRECTORY_TABLE>& GetImportDirectoryTable();
+	std::vector<peanalyzer::IMPORT_INFO>& GetImportInformation();
 	std::string& GetTextSectionDisassembly();
 	void WriteTextSectionDisassemblyToStream(std::ostream& out_stream);
 	size_t GetBytesRead();
